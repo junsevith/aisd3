@@ -1,0 +1,43 @@
+[package]
+name = "lista3"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "randarr"
+path = "src/bin/randarr.rs"
+
+[[bin]]
+name = "sortarr"
+path = "src/bin/sortarr.rs"
+
+[[bin]]
+name = "revarr"
+path = "src/bin/revarr.rs"
+
+[[bin]]
+name = "randsel"
+path = "src/bin/randsel.rs"
+
+[[bin]]
+name = "medsel"
+path = "src/bin/medsel.rs"
+
+[[bin]]
+name = "binsearch"
+path = "src/bin/binsearch.rs"
+
+[[bin]]
+name = "zad2"
+path = "src/zadania/zad2.rs"
+
+[[bin]]
+name = "zad3"
+path = "src/zadania/zad3.rs"
+
+
+[dependencies]
+rand = "0.9.0-alpha.1"
+env_logger = "0.11.3"
+log = {version = "0.4.21", features = ["release_max_level_warn"]}
+plotters = "0.3"
