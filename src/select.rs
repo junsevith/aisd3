@@ -1,106 +1,10 @@
 use std::fmt::Debug;
+use std::iter;
+use itertools::Itertools;
 use log::trace;
-
-use rand::prelude::IndexedRandom;
 use rand::Rng;
-
+use crate::rand_select::hoare_partition;
 use crate::stats::Stats;
-
-// static mut COMPS: usize = 0;
-// static mut SWAPS: usize = 0;
-// 
-// fn stats.comp() {
-//     unsafe {
-//         COMPS += 1;
-//     }
-// }
-// 
-// fn stats.swap() {
-//     unsafe {
-//         SWAPS += 1;
-//     }
-// }
-// 
-// fn reset() {
-//     unsafe {
-//         COMPS = 0;
-//         SWAPS = 0;
-//     }
-// }
-// 
-// fn stats() -> (usize, usize) {
-//     unsafe {
-//         let res = (COMPS, SWAPS);
-//         reset();
-//         res
-//     }
-// }
-// 
-
-
-
-pub fn rand_select<'a, T: Ord + Debug>(array: &'a mut [T], pos: usize, stats: &mut Stats) -> &'a mut T {
-    if array.len() == 1 {
-        return &mut array[0];
-    }
-    let r = rand_partition(array, stats);
-    trace!("partitioned: {:?} around {:?}", array,  array[r]);
-
-    let k = r + 1;
-    return if pos == k {
-        &mut array[r]
-    } else if pos < k {
-        rand_select(&mut array[..r], pos, stats)
-    } else {
-        rand_select(&mut array[k..], pos - k, stats)
-    };
-}
-
-fn rand_partition<T: Ord>(array: &mut [T], stats: &mut Stats) -> usize {
-    let r = rand::thread_rng().gen_range(0..array.len());
-    array.swap(array.len() - 1, r);
-    hoare_partition(array, stats)
-}
-
-pub fn hoare_partition<T: Ord>(array: &mut [T], stats: &mut Stats) -> usize {
-    let last = array.len() - 1;
-
-    let (pivot, sorting) = array.split_last_mut().unwrap();
-
-    let mut i = 0;
-    let mut j = last - 1;
-    loop {
-        while {
-            stats.comp();
-            i < last - 1 && sorting[i] < *pivot
-        } {
-            i += 1;
-        }
-        while {
-            stats.comp();
-            j > 0 && sorting[j] > *pivot
-        } {
-            j -= 1;
-        }
-
-        if i >= j {
-            break;
-        } else {
-            stats.swap();
-            sorting.swap(i, j);
-
-            i += 1;
-            j -= 1;
-        }
-    }
-
-
-    stats.comp();
-    if sorting[j] < *pivot { j += 1; }
-    stats.swap();
-    array.swap(j, last);
-    j
-}
 
 pub fn hoare_partition_pivot<T: Ord>(array: &mut [T], pivot: &T, stats: &mut Stats) -> usize {
     let mut i = 0;
@@ -132,58 +36,66 @@ pub fn hoare_partition_pivot<T: Ord>(array: &mut [T], pivot: &T, stats: &mut Sta
     j
 }
 
-pub fn lomuto_partition<T: Ord>(array: &mut [T], stats: &mut Stats) -> usize {
-    let pivot = array.len() - 1;
-    let mut i = 0;
-    for j in 0..array.len() {
-        if {
-            stats.comp();
-            array[j] < array[pivot]
-        } {
-            stats.swap();
-            array.swap(i, j);
-            i += 1;
-        }
-        stats.comp();
-    }
-    stats.swap();
-    array.swap(i, pivot);
-    i
-}
-
-pub fn select<T: Ord + Clone + Debug>(array: &mut [T], pos: usize, group: usize, stats: &mut Stats) -> T {
+pub fn select<'a, T: Ord + Debug>(array: &'a mut [T], pos: usize, group: usize, stats: &mut Stats) -> &'a T {
+    trace!("Selecting {:?} from {:?}", pos, array);
     if array.len() <= group {
         insertion_sort(array, stats);
-        return array[pos - 1].clone();
+        return &array[pos - 1];
     }
 
-    let mut pivot = median_pivot(array, group, stats);
+    median_pivot(array, group, stats);
 
-    let r = hoare_partition_pivot(array, &pivot, stats);
-    let k = r + 1;
-    trace!("partitioned: {:?} around {:?}, r= {:?}", array,  pivot, r);
-    return if pos == k {
-        pivot
-    } else if pos < k {
-        select(&mut array[..k], pos, group, stats)
+    let index = hoare_partition(array, stats);
+    let stat = index + 1;
+    trace!("using {:?} partitioned: {:?}", array[index], array );
+    return if pos == stat {
+        &array[index]
+    } else if pos < stat {
+        select(&mut array[..index], pos, group, stats)
     } else {
-        select(&mut array[k..], pos - k, group, stats)
+        select(&mut array[stat..], pos - stat, group, stats)
     };
 }
 
-fn median_pivot<T: Ord + Clone + Debug>(array: &mut [T], pos: usize, stats: &mut Stats) -> T {
-    let mut medians = array.chunks_mut(pos).map(|chunk| median(chunk, stats).clone()).collect::<Vec<_>>();
+///This function finds best pivot and places it at the end of the array
+pub fn median_pivot<T: Ord + Debug>(array: &mut [T], group: usize, stats: &mut Stats) {
+    let mut index = 0;
+
+    for (start, end) in (0..array.len()).step_by(group).chain(iter::once(array.len())).tuple_windows() {
+        insertion_sort(&mut array[start..end], stats);
+        stats.swap();
+        array.swap(index, (start + end) / 2);
+        index += 1;
+    }
+
+    // for chunk in (0..array.len()).chunks(group) {
+    //     let vals = chunk.collect::<Vec<_>>();
+    //     let first = *vals.first().unwrap();
+    //     let last = *vals.last().unwrap();
+    //     let mid = (last + first) / 2;
+    //     insertion_sort(&mut array[first..=last], stats);
+    //     stats.swap();
+    //     array.swap(index, mid);
+    //     index += 1;
+    // }
+
+    let medians = &mut array[..index];
     trace!("Found medians: {:?}", medians);
+
     let mid = medians.len() / 2;
-    select(&mut medians, mid, pos, stats)
+    let a = select(medians, mid + 1, group, stats);
+    trace!("Selected pivot: {:?}", a);
+
+    stats.swap();
+    array.swap(mid, array.len() - 1);
 }
 
-fn median<'a, T: Ord + Clone>(array: &'a mut [T], stats: &mut Stats) -> &'a T {
+pub(crate) fn median<'a, T: Ord >(array: &'a mut [T], stats: &mut Stats) -> &'a T {
     insertion_sort(array, stats);
     &array[array.len() / 2]
 }
 
-fn insertion_sort<T: Ord + Clone>(array: &mut [T], stats: &mut Stats) {
+pub(crate) fn insertion_sort<T: Ord >(array: &mut [T], stats: &mut Stats) {
     for i in 0..array.len() {
         let mut j = i;
         while j > 0 && {

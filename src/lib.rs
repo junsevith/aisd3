@@ -3,16 +3,20 @@ pub mod stats;
 pub mod arr_gen;
 pub mod chart;
 pub mod search;
+pub mod rand_select;
+pub mod quicksort;
+pub mod select_sort;
 
+#[cfg(test)]
 mod tests {
-    use log::{debug, LevelFilter, trace};
-    use rand::{Rng, thread_rng};
+    use log::{debug, trace};
     use crate::arr_gen::random_array;
     use crate::chart::draw_chart;
+    use crate::rand_select::rand_select;
     use crate::search::bin_search;
-    use crate::select::{rand_select, select};
+    use crate::select::{median_pivot, select};
+    use crate::select_sort::{select_dual_pivot_quicksort, select_quicksort};
     use crate::stats::{setup_logger, Stats};
-    use super::*;
 
     #[test]
     fn test() {
@@ -43,26 +47,26 @@ mod tests {
         let size = 39;
         setup_logger(size);
         // for _i in 0..100 {
-            let look = 12;
-            let group = 5;
-            let mut stats = Stats::new();
-            let mut vals = random_array(size, &mut rand::thread_rng());
+        let look = 12;
+        let group = 5;
+        let mut stats = Stats::new();
+        let mut vals = random_array(size, &mut rand::thread_rng());
 
 
-            let before = format!("Before: {:?}", vals);
-            trace!("{}", before);
+        let before = format!("Before: {:?}", vals);
+        trace!("{}", before);
 
-            let found = select(&mut vals, look, group, &mut stats);
+        let found = *select(&mut vals, look, group, &mut stats);
 
-            trace!("{}", before);
-            trace!("After: {:?}", vals);
+        trace!("{}", before);
+        trace!("After: {:?}", vals);
 
-            debug!("For: {} found: {} {}", look, found, if found == *vals.clone().select_nth_unstable(look-1).1 {"Correct!"} else {"Incorrect!"});
+        debug!("For: {} found: {} {}", look, found, if found == *vals.clone().select_nth_unstable(look-1).1 {"Correct!"} else {"Incorrect!"});
 
-            debug!("Stats: {:?}", stats);
+        debug!("Stats: {:?}", stats);
 
-            vals.sort();
-            trace!("Sorted: {:?}", vals)
+        vals.sort();
+        trace!("Sorted: {:?}", vals)
         // }
     }
 
@@ -85,7 +89,42 @@ mod tests {
         let res = bin_search(&vec, &11, &mut stats);
         println!("{}", res);
         println!("{:?}", stats);
+    }
 
+    #[test]
+    fn test5() {
+        let mut vec = random_array(20, &mut rand::thread_rng());
+        setup_logger(vec.len());
+        trace!("{:?}", vec);
+
+        let mut stats = Stats::new();
+
+        median_pivot(&mut vec, 5, &mut stats);
+        trace!("{:?}", vec);
+    }
+
+    #[test]
+    fn test6() {
+        let mut vec = random_array(25, &mut rand::thread_rng());
+        setup_logger(vec.len());
+        trace!("{:?}", vec);
+        let mut stats = Stats::new();
+
+        select_quicksort(&mut vec, 5, &mut stats);
+        trace!("{:?}", vec);
+        debug!("{:?}", stats);
+    }
+
+    #[test]
+    fn test7() {
+        let mut vec = random_array(25, &mut rand::thread_rng());
+        setup_logger(vec.len());
+        trace!("{:?}", vec);
+        let mut stats = Stats::new();
+
+        select_dual_pivot_quicksort (&mut vec, 5, &mut stats);
+        trace!("{:?}", vec);
+        debug!("{:?}", stats);
     }
 }
 

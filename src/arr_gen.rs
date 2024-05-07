@@ -19,7 +19,7 @@ pub fn reverse_array(size: usize) -> Vec<usize> {
 
 
 pub fn random_array2(size: usize, rng: &mut impl Rng) -> Vec<usize> {
-    let mut range = Uniform::new(0, 2*size-1).unwrap();
+    let range = Uniform::new(0, 2*size-1).unwrap();
     let mut vec = Vec::with_capacity(size);
     for _i in 0..size {
         vec.push(range.sample(rng))

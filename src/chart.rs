@@ -12,13 +12,14 @@ pub fn draw_chart<T>(data: Vec<(&str, Vec<T>)>, n_range: impl Iterator<Item=usiz
     let last = n_range_copy.last().unwrap() as f64;
     let x_range = first..last;
 
-    let max = data.iter().map(|x| x.1.iter().max_by(|a,b| a.partial_cmp(b).unwrap()))
+    let max: f64 = data.iter().map(|x| x.1.iter().max_by(|a,b| a.partial_cmp(b).unwrap()))
         .max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap().unwrap().clone().into();
-    let y_range = 0.0..max;
+
+    let y_range = 0.0..(max*1.1);
 
 
 
-    let mut drawing_area = BitMapBackend::new(&file, (1280, 720)).into_drawing_area();
+    let drawing_area = BitMapBackend::new(&file, (1280, 720)).into_drawing_area();
     drawing_area.fill(&WHITE).unwrap();
 
     let mut ctx = ChartBuilder::on(&drawing_area)

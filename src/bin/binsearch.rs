@@ -1,9 +1,7 @@
 use std::{env, io};
 use std::io::BufRead;
-use std::iter::successors;
-use log::{debug, trace};
+use log::{debug};
 use lista3::search::bin_search;
-use lista3::select::rand_select;
 use lista3::stats::{setup_logger, Stats};
 
 fn main() {
