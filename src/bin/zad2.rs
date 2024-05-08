@@ -50,8 +50,13 @@ fn main() {
     let stat_names = ["Comparisons", "Swaps"];
     let fun_names = ["Randomized Select", "Median Select"];
 
+    data.clone().into_iter().enumerate().for_each(|(count, data)| {
+        let data = fun_names.into_iter().zip(data.into_iter()).collect::<Vec<_>>();
+        draw_chart(data, n.clone(), &format!("zad2_{}", stat_names[count]), |x, y| y)
+    });
+
     data.into_iter().enumerate().for_each(|(count, data)| {
         let data = fun_names.into_iter().zip(data.into_iter()).collect::<Vec<_>>();
-        draw_chart(data, n.clone(), &format!("zad2_{}", stat_names[count]))
+        draw_chart(data, n.clone(), &format!("zad2_per_n_{}", stat_names[count]), |x, y| y / x)
     })
 }

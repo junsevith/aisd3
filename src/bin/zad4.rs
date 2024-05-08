@@ -85,8 +85,13 @@ fn main() {
     let stat_names = ["Comparisons", "Time"];
     let fun_names = ["Random element", "From beginning", "From middle", "From end", "Outside element"];
 
+    data.clone().into_iter().enumerate().for_each(|(count, data)| {
+        let data = fun_names.into_iter().zip(data.into_iter()).collect::<Vec<_>>();
+        draw_chart(data, n.clone(), &format!("zad4_{}", stat_names[count]), |x, y| y)
+    });
+
     data.into_iter().enumerate().for_each(|(count, data)| {
         let data = fun_names.into_iter().zip(data.into_iter()).collect::<Vec<_>>();
-        draw_chart(data, n.clone(), &format!("zad4_{}", stat_names[count]))
+        draw_chart(data, n.clone(), &format!("zad4_per_logn{}", stat_names[count]), |x, y| y/x.log2())
     })
 }

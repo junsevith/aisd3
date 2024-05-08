@@ -2,6 +2,7 @@ use std::fmt::Debug;
 use std::iter;
 use itertools::Itertools;
 use log::trace;
+use crate::quicksort::dual_pivot_partition;
 
 use crate::rand_select::hoare_partition;
 use crate::select::{insertion_sort, median_pivot, select};
@@ -30,79 +31,79 @@ pub fn select_dual_pivot_quicksort<T: Ord + Debug>(array: &mut [T], group: usize
     }
 }
 
-fn dual_pivot_partition<T: Ord>(array: &mut [T], stats: &mut Stats) -> (usize, usize) {
-    let mut smaller = 0;
-    let mut bigger = 0;
-    let (left_pivot, right_pivot) = (0, array.len() - 1);
-
-    // if array[left_pivot] > array[right_pivot] {
-    //     stats.swap();
-    //     array.swap(left_pivot, right_pivot);
-    // }
-
-    let mut left = left_pivot + 1;
-    let mut right = right_pivot - 1;
-    let mut iter = left;
-
-    while iter <= right {
-        if bigger > smaller {
-            if {
-                stats.comp();
-                array[iter] > array[right_pivot]
-            } {
-                array.swap(iter, right);
-                stats.swap();
-
-                right -= 1;
-                bigger += 1;
-            } else if {
-                stats.comp();
-                array[iter] < array[left_pivot]
-            } {
-                array.swap(iter, left);
-                stats.swap();
-
-                left += 1;
-                iter += 1;
-                smaller += 1
-            } else {
-                iter += 1;
-            }
-        } else {
-            if {
-                stats.comp();
-                array[iter] < array[left_pivot]
-            } {
-                array.swap(iter, left);
-                stats.swap();
-
-                left += 1;
-                iter += 1;
-                smaller += 1;
-            } else if {
-                stats.comp();
-                array[iter] > array[right_pivot]
-            } {
-                array.swap(iter, right);
-                stats.swap();
-
-                right -= 1;
-                bigger += 1;
-            } else {
-                iter += 1;
-            }
-        }
-    }
-
-    left -= 1;
-    right += 1;
-    stats.swap();
-    array.swap(left_pivot, left);
-    stats.swap();
-    array.swap(right_pivot, right);
-
-    (left, right)
-}
+// fn dual_pivot_partition<T: Ord>(array: &mut [T], stats: &mut Stats) -> (usize, usize) {
+//     let mut smaller = 0;
+//     let mut bigger = 0;
+//     let (left_pivot, right_pivot) = (0, array.len() - 1);
+//
+//     // if array[left_pivot] > array[right_pivot] {
+//     //     stats.swap();
+//     //     array.swap(left_pivot, right_pivot);
+//     // }
+//
+//     let mut left = left_pivot + 1;
+//     let mut right = right_pivot - 1;
+//     let mut iter = left;
+//
+//     while iter <= right {
+//         if bigger > smaller {
+//             if {
+//                 stats.comp();
+//                 array[iter] > array[right_pivot]
+//             } {
+//                 array.swap(iter, right);
+//                 stats.swap();
+//
+//                 right -= 1;
+//                 bigger += 1;
+//             } else if {
+//                 stats.comp();
+//                 array[iter] < array[left_pivot]
+//             } {
+//                 array.swap(iter, left);
+//                 stats.swap();
+//
+//                 left += 1;
+//                 iter += 1;
+//                 smaller += 1
+//             } else {
+//                 iter += 1;
+//             }
+//         } else {
+//             if {
+//                 stats.comp();
+//                 array[iter] < array[left_pivot]
+//             } {
+//                 array.swap(iter, left);
+//                 stats.swap();
+//
+//                 left += 1;
+//                 iter += 1;
+//                 smaller += 1;
+//             } else if {
+//                 stats.comp();
+//                 array[iter] > array[right_pivot]
+//             } {
+//                 array.swap(iter, right);
+//                 stats.swap();
+//
+//                 right -= 1;
+//                 bigger += 1;
+//             } else {
+//                 iter += 1;
+//             }
+//         }
+//     }
+//
+//     left -= 1;
+//     right += 1;
+//     stats.swap();
+//     array.swap(left_pivot, left);
+//     stats.swap();
+//     array.swap(right_pivot, right);
+//
+//     (left, right)
+// }
 
 pub fn median_dual_pivot<T: Ord + Debug>(array: &mut [T], group: usize, stats: &mut Stats) {
     let mut index = 0;
